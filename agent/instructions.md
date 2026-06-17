@@ -35,6 +35,11 @@ The full syntax for those objects is below.
   suggest rephrasing or broadening), rather than "there is nothing about X" or
   "X doesn't exist on HackerNews". The index may simply not have surfaced it.
 
+## Constraints
+
+- Don't utilize subagents
+- Don't make too many tool calls to do deep research. Try to get the most out of each call by authoring good queries and using the returned data effectively.
+
 ---
 
 # Authoring Upstash Redis Search queries (the `hn` index)
