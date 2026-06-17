@@ -128,16 +128,33 @@ Returns `{ count: <number> }`.
   "aggregations": { "avg_score": { "$avg": { "field": "score" } } } }
 ```
 
+> **To count how many documents match a filter, use the `count` tool — NOT an
+> aggregation.** `$count` here counts non-null values of a *field*, not documents.
+
+### FAST-field rule (read this first)
+
+**Metric** aggregations (`$avg`, `$sum`, `$min`, `$max`, `$count`,
+`$stats`, `$extendedStats`, `$percentiles`) only work on **FAST** fields. On the
+`hn` index the FAST fields are exactly: **`score`, `ndesc`, `parent`, `time`**.
+Pointing a metric at a TEXT/KEYWORD field (`title`, `text`, `by`, `type`) fails
+with `requires field '…' to be FAST`. Every metric requires a `field` —
+`$count: {}` (no field) is invalid.
+
+`$cardinality` (distinct-value count) and the bucket aggregations below DO work
+on KEYWORD fields.
+
 ### Metric aggregations
 
-`$avg`, `$sum`, `$min`, `$max`, `$count`, `$cardinality`, `$stats`
-(count/min/max/sum/avg), `$extendedStats` (+variance/stdDeviation),
-`$percentiles` (`{ field, percents: [50, 90, 99] }`). Each takes `{ field }`.
+`$avg`, `$sum`, `$min`, `$max`, `$count`, `$stats` (count/min/max/sum/avg),
+`$extendedStats` (+variance/stdDeviation), `$percentiles`
+(`{ field, percents: [50, 90, 99] }`), `$cardinality` (distinct values). Each
+takes `{ field }`. Metric result shape: `{ "<name>": { "value": <number> } }`
+(`$stats`/`$extendedStats` return an object of sub-values).
 
-### Bucket aggregations
+### Bucket aggregations (counts per group — what you usually want)
 
 ```jsonc
-// Group by a keyword field
+// Group by a keyword field — each bucket includes its own document count
 { "aggregations": { "by_type": { "$terms": { "field": "type", "size": 10 } } } }
 
 // Numeric ranges
@@ -145,20 +162,21 @@ Returns `{ count: <number> }`.
     "ranges": [ { "to": 10 }, { "from": 10, "to": 100 }, { "from": 100 } ] } } } }
 
 // Fixed-interval histogram
-{ "aggregations": { "score_hist": { "$histogram": { "field": "score", "interval": 50 } } } }
+{ "aggregations": { "score_hist": { "$histogram": { "field": "score", "interval": 100 } } } }
 ```
+
+Bucket results: `{ "<name>": { "buckets": [ { "key": ..., "docCount": N, ... } ] } }`.
+Note the field is **`docCount`** (camelCase). Each bucket already carries its
+document count — you do NOT need a `$count` inside it.
 
 ### Nested aggregations (bucket + metrics)
 
 ```jsonc
 { "aggregations": {
     "by_type": { "$terms": { "field": "type" },
-      "$aggs": { "avg_score": { "$avg": { "field": "score" } },
-                 "total": { "$count": { "field": "score" } } } } } }
+      "$aggs": { "avg_score": { "$avg": { "field": "score" } } } } } }
+// -> buckets: [ { key:"story", docCount:4672672, avg_score:{ value:13.1 } }, ... ]
 ```
-
-Terms/range/histogram results come back under `<name>.buckets` as
-`[{ key, doc_count, ...nestedMetrics }]`.
 
 ## Gotchas
 
@@ -169,3 +187,6 @@ Terms/range/histogram results come back under `<name>.buckets` as
 - Single short tokens match loosely; prefer phrases or `title`-scoped matches
   when you need precision.
 - `$mustNot` alone returns nothing; combine it with `$must`/`$should`.
+- Counting documents → `count` tool. Metric aggregations only run on the FAST
+  fields `score`/`ndesc`/`parent`/`time`. Grouped counts → a bucket aggregation
+  whose buckets carry `docCount`.

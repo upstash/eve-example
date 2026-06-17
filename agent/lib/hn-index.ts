@@ -18,12 +18,13 @@ export const SEARCH_SKILL = "upstash-redis-search";
  * description so the model knows which fields it can filter / sort / aggregate.
  */
 export const HN_SCHEMA_DOC = `Index "hn" — HackerNews items (~44M docs, key prefix "hn:"). Fields:
-- title  TEXT     full-text searchable item title
-- text   TEXT     full-text body / comment text (often empty on link stories)
-- by     KEYWORD  author username (exact match)
-- type   KEYWORD  one of: story | comment | job | poll | pollopt
-- score  F64      HackerNews points / upvotes (numeric, sortable)
-- ndesc  F64      number of descendants (≈ comment count)
-- parent F64      parent item id (0 for top-level stories)
-- time   DATE     creation time (ISO timestamp)
+- title  TEXT          full-text searchable item title
+- text   TEXT          full-text body / comment text (often empty on link stories)
+- by     KEYWORD       author username (exact match)
+- type   KEYWORD       one of: story | comment | job | poll | pollopt
+- score  F64 (FAST)    HackerNews points / upvotes (numeric, sortable, aggregatable)
+- ndesc  F64 (FAST)    number of descendants (≈ comment count)
+- parent F64 (FAST)    parent item id (0 for top-level stories)
+- time   DATE (FAST)   creation time (ISO timestamp)
+Only FAST fields (score, ndesc, parent, time) support metric aggregations ($avg/$sum/$count/etc.).
 The stored hash also carries non-indexed "id" and "url" fields, returned in query results.`;

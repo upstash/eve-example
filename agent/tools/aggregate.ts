@@ -9,7 +9,9 @@ import { hnIndex, HN_SCHEMA_DOC, SEARCH_SKILL } from "../lib/hn-index.ts";
 export default defineTool({
   description: `Run an Upstash Redis Search AGGREGATE against the HackerNews "hn" index for analytics (averages, sums, min/max, grouping, histograms, percentiles).
 You author the raw aggregate-options object ({ filter?, aggregations }) and it is passed straight to index.aggregate(...).
-Metric aggs: $avg $sum $min $max $count $cardinality $stats $extendedStats $percentiles. Bucket aggs: $terms $range $histogram $facet (nest metrics under $aggs).
+Metric aggs: $avg $sum $min $max $count $stats $extendedStats $percentiles $cardinality. Bucket aggs: $terms $range $histogram (nest metrics under $aggs).
+IMPORTANT: to count DOCUMENTS matching a filter, use the "count" tool instead — $count counts non-null values of a field, not documents.
+Metric aggregations (incl. $count) only work on FAST numeric/date fields: score, ndesc, parent, time. Grouping ($terms) works on keyword fields and each bucket already includes its docCount.
 Load the "${SEARCH_SKILL}" skill (via load_skill) for the full aggregation syntax before writing aggregations.
 
 ${HN_SCHEMA_DOC}`,
