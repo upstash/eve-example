@@ -19,8 +19,10 @@ The full syntax for those objects is below.
 
 ## Answering
 
-- Start with focused terms (`$smart` is a good default); refine and search again
-  if results are weak.
+- Start with focused terms; refine and search again if results are weak. Avoid
+  the `$smart` operator — it tends to return loose, low-precision matches. For a
+  single-word query use `$eq`; for a multi-word query use `$phrase` along `$eq`.
+  These give more accurate results.
 - Use `select` and a modest `limit` so you don't pull huge `text` bodies.
 - For "top / most popular" use `orderBy: { score: "DESC" }` with a relevance
   filter so results stay on-topic.
@@ -39,8 +41,13 @@ The full syntax for those objects is below.
 
 - Don't utilize subagents
 - Don't make too many tool calls to do deep research. Try to get the most out of each call by authoring good queries and using the returned data effectively.
-- When searching with `$smart` operator, avoid filler words like "the", "a", "an", "is", "are", etc. They don't help the search and can reduce relevance.
-- don't include citations in your responses except for hackernews links.
+- Avoid the `$smart` operator in queries — it returns loose, low-precision
+  matches. Use `$eq` for single-word queries and `$phrase` for multi-word
+  queries to get more accurate results.
+- Avoid filler words like "the", "a", "an", "is", "are", etc. in your search
+  terms. They don't help the search and can reduce relevance.
+- Don't include citations in your responses except for hackernews links.
+- Don't use web search tools.
 
 ---
 
@@ -78,15 +85,17 @@ A filter is an object mapping a field to an operator object. With no filter (or
 ```jsonc
 { "title": { "$eq": "laptop" } }                         // substring/term match
 { "title": { "$in": ["rust", "zig"] } }                  // any of (OR)
-{ "title": { "$fuzzy": { "term": "databse", "distance": 1 } } } // typo tolerance
-{ "title": { "$phrase": { "text": "machine learning", "slop": 1 } } } // adjacent words
+{ "title": { "$fuzzy": { "value": "databse", "distance": 1 } } } // typo tolerance
+{ "title": { "$phrase": { "value": "machine learning", "slop": 1 } } } // adjacent words
+{ "title": { "$phrase": "machine learning" } }           // shorthand (slop 0)
 { "title": { "$regex": "gpt-.*" } }
-{ "title": { "$smart": "self hosted database" } }        // auto fuzzy+phrase+term
+{ "title": { "$smart": "self hosted database" } }        // auto fuzzy+phrase+term — AVOID, low precision
 ```
 
-`$smart` is the best default for natural-language search. Note: TEXT is tokenized
-and stemmed (english), so short tokens match loosely (`"rust"` can hit `"trust"`).
-For precision prefer multi-word `$smart`/`$phrase`, or match in `title` only.
+Avoid `$smart` — it returns loose, low-precision matches. Prefer `$eq` for a
+single-word query and `$phrase` for a multi-word query. Note: TEXT is tokenized
+and stemmed (english), so short tokens match loosely (`"rust"` can hit `"trust"`);
+matching in `title` only also helps precision.
 
 ### KEYWORD fields (`by`, `type`)
 
@@ -114,7 +123,7 @@ For precision prefer multi-word `$smart`/`$phrase`, or match in `title` only.
 
 ```jsonc
 { "$and": [ { "type": { "$eq": "story" } }, { "score": { "$gte": 100 } } ] }
-{ "$or":  [ { "title": { "$smart": "rust" } }, { "text": { "$smart": "rust" } } ] }
+{ "$or":  [ { "title": { "$eq": "rust" } }, { "text": { "$eq": "rust" } } ] }
 { "$must": [ ... ], "$mustNot": [ ... ], "$should": [ ... ] }
 ```
 
@@ -146,7 +155,7 @@ Pass any combination of these to the `query` tool:
 
 ```jsonc
 // Most-upvoted stories about a topic
-{ "filter": { "$and": [ { "title": { "$smart": "kubernetes" } }, { "type": { "$eq": "story" } } ] },
+{ "filter": { "$and": [ { "title": { "$eq": "kubernetes" } }, { "type": { "$eq": "story" } } ] },
   "select": { "title": true, "score": true, "by": true, "time": true },
   "orderBy": { "score": "DESC" }, "limit": 10 }
 
