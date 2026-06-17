@@ -81,8 +81,50 @@ export function AgentChat() {
         ) : null}
       </AnimatePresence>
 
-      {isEmpty && (
-        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center gap-6 px-4 pb-[8vh] sm:px-6">
+      {!isEmpty && (
+        <Conversation className="min-h-0 flex-1">
+          <ConversationContent className="mx-auto w-full max-w-4xl gap-6 px-4 py-6 sm:px-6">
+            {agent.data.messages.map((message, index) => (
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full"
+                initial={message.role === "user" ? false : { opacity: 0, y: 12 }}
+                key={message.id}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <AgentMessage
+                  canRespond={!isBusy}
+                  isStreaming={
+                    agent.status === "streaming" && index === agent.data.messages.length - 1
+                  }
+                  message={message}
+                  onInputResponses={(inputResponses) => agent.send({ inputResponses })}
+                />
+              </motion.div>
+            ))}
+            {awaitingResponse ? (
+              <motion.div animate={{ opacity: 1 }} className="w-full" initial={{ opacity: 0 }}>
+                <div className="flex w-fit items-center justify-center rounded-2xl bg-muted/50 px-4 py-3">
+                  <Spinner className="size-4 text-muted-foreground" />
+                </div>
+              </motion.div>
+            ) : null}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
+      )}
+
+      {/* The composer is a single persistent element: centered on the landing
+          page, pinned to the bottom while chatting. `layout` lives on the
+          composer itself so it animates from its real position (not the full
+          flex-1 column, whose box starts at the top of the screen). */}
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-4xl flex-col items-center gap-6 px-4 sm:px-6",
+          isEmpty ? "flex-1 justify-center pb-[8vh]" : "shrink-0 pb-6",
+        )}
+      >
+        {isEmpty ? (
           <div className="flex flex-col items-center gap-2">
             <span className="mb-1 text-center text-muted-foreground text-xs uppercase tracking-wide">
               Try asking
@@ -102,53 +144,15 @@ export function AgentChat() {
               </div>
             ))}
           </div>
-          <motion.div className="mx-auto w-full max-w-xl" layoutId="composer" transition={SPRING}>
-            {composer}
-          </motion.div>
-        </section>
-      )}
-
-      {!isEmpty && (
-        <>
-          <Conversation className="min-h-0 flex-1">
-            <ConversationContent className="mx-auto w-full max-w-4xl gap-6 px-4 py-6 sm:px-6">
-              {agent.data.messages.map((message, index) => (
-                <motion.div
-                  animate={{ opacity: 1, y: 0 }}
-                  className="w-full"
-                  initial={message.role === "user" ? false : { opacity: 0, y: 12 }}
-                  key={message.id}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  <AgentMessage
-                    canRespond={!isBusy}
-                    isStreaming={
-                      agent.status === "streaming" && index === agent.data.messages.length - 1
-                    }
-                    message={message}
-                    onInputResponses={(inputResponses) => agent.send({ inputResponses })}
-                  />
-                </motion.div>
-              ))}
-              {awaitingResponse ? (
-                <motion.div animate={{ opacity: 1 }} className="w-full" initial={{ opacity: 0 }}>
-                  <div className="flex w-fit items-center justify-center rounded-2xl bg-muted/50 px-4 py-3">
-                    <Spinner className="size-4 text-muted-foreground" />
-                  </div>
-                </motion.div>
-              ) : null}
-            </ConversationContent>
-            <ConversationScrollButton />
-          </Conversation>
-          <motion.div
-            className="mx-auto w-full max-w-4xl shrink-0 px-4 pb-6 sm:px-6"
-            layoutId="composer"
-            transition={SPRING}
-          >
-            {composer}
-          </motion.div>
-        </>
-      )}
+        ) : null}
+        <motion.div
+          className={cn("w-full", isEmpty && "max-w-xl")}
+          layout
+          transition={SPRING}
+        >
+          {composer}
+        </motion.div>
+      </div>
     </main>
   );
 }
