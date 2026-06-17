@@ -150,7 +150,9 @@ export function AgentChat() {
           layout
           transition={SPRING}
         >
-          {composer}
+          {/* Inner `layout` counter-corrects the outer's scale so the box can
+              expand while the text inside stays crisp (no stretching). */}
+          <motion.div layout transition={SPRING}>{composer}</motion.div>
         </motion.div>
       </div>
     </main>
