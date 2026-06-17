@@ -23,7 +23,7 @@ type AgentStatus = ReturnType<typeof useEveAgent>["status"];
 // Laid out 1-2-2 across rows; chips hug their text and stay on a single line.
 const SUGGESTION_ROWS = [
   ["Top stories about Rust"],
-  ["Most upvoted Show HN launches", "Average score of stories vs jobs"],
+  ["Most upvoted Show HN launches", "Average upvotes of stories vs jobs"],
   ["What do people say about remote work?", "How many stories mention AI in the title?"],
 ];
 
