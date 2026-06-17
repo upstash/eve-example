@@ -1,6 +1,7 @@
 "use client";
 
 import type { EveDynamicToolPart, EveMessage, EveMessagePart } from "eve/react";
+import { motion } from "motion/react";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/ai-elements/reasoning";
 import {
@@ -18,6 +19,16 @@ export type AgentInputResponse = {
   readonly text?: string;
 };
 
+/** Whether a message has anything worth showing (text, reasoning, or a tool call). */
+export function messageHasVisibleContent(message: EveMessage): boolean {
+  return message.parts.some(
+    (part) =>
+      part.type === "dynamic-tool" ||
+      (part.type === "text" && part.text.trim().length > 0) ||
+      (part.type === "reasoning" && part.text.trim().length > 0),
+  );
+}
+
 export function AgentMessage({
   canRespond,
   isStreaming,
@@ -33,6 +44,12 @@ export function AgentMessage({
     (last, part, index) => (part.type === "text" ? index : last),
     -1,
   );
+
+  // Don't render an empty assistant bubble while it's still spinning up — the
+  // pending spinner (in AgentChat) covers that window instead.
+  if (message.role === "assistant" && !messageHasVisibleContent(message)) {
+    return null;
+  }
 
   return (
     <Message
@@ -69,11 +86,7 @@ function AgentMessagePart({
     case "step-start":
       return null;
     case "text":
-      return (
-        <MessageResponse caret="block" isAnimating={showCaret}>
-          {part.text}
-        </MessageResponse>
-      );
+      return <MessageResponse isAnimating={showCaret}>{part.text}</MessageResponse>;
     case "reasoning":
       return (
         <Reasoning defaultOpen isStreaming={part.state === "streaming"}>
@@ -83,25 +96,31 @@ function AgentMessagePart({
       );
     case "dynamic-tool":
       return (
-        <Tool
-          defaultOpen={part.state === "approval-requested" || part.state === "approval-responded"}
+        <motion.div
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
         >
-          <ToolHeader
-            state={part.state}
-            title={part.toolName}
-            toolName={part.toolName}
-            type="dynamic-tool"
-          />
-          <ToolContent>
-            <ToolInput input={part.input} />
-            <InputRequestActions
-              canRespond={canRespond}
-              part={part}
-              onInputResponses={onInputResponses}
+          <Tool
+            defaultOpen={part.state === "approval-requested" || part.state === "approval-responded"}
+          >
+            <ToolHeader
+              state={part.state}
+              title={part.toolName}
+              toolName={part.toolName}
+              type="dynamic-tool"
             />
-            <ToolOutput errorText={part.errorText} output={part.output} />
-          </ToolContent>
-        </Tool>
+            <ToolContent>
+              <ToolInput input={part.input} />
+              <InputRequestActions
+                canRespond={canRespond}
+                part={part}
+                onInputResponses={onInputResponses}
+              />
+              <ToolOutput errorText={part.errorText} output={part.output} />
+            </ToolContent>
+          </Tool>
+        </motion.div>
       );
   }
 }

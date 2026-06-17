@@ -14,17 +14,42 @@ import {
 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { isValidElement } from "react";
+import { useStickToBottomContext } from "use-stick-to-bottom";
 
 import { CodeBlock } from "./code-block";
 
+// Shrink the code font/padding for tool input & output blocks specifically.
+const CODE_CLASS = "[&_pre]:!p-3 [&_pre]:!text-[11px] [&_code]:!text-[11px]";
+
 export type ToolProps = ComponentProps<typeof Collapsible>;
 
-export const Tool = ({ className, ...props }: ToolProps) => (
-  <Collapsible
-    className={cn("group not-prose mb-4 w-full rounded-md border", className)}
-    {...props}
-  />
-);
+export const Tool = ({ className, onOpenChange, ...props }: ToolProps) => {
+  const { scrollRef, stopScroll } = useStickToBottomContext();
+
+  // Toggling a tool resizes the conversation; keep the viewport where it is
+  // instead of letting stick-to-bottom yank it down.
+  const handleOpenChange = (open: boolean) => {
+    onOpenChange?.(open);
+    const el = scrollRef.current;
+    if (!el) return;
+    const top = el.scrollTop;
+    let frame = 0;
+    const hold = () => {
+      stopScroll();
+      el.scrollTop = top;
+      if (frame++ < 18) requestAnimationFrame(hold);
+    };
+    requestAnimationFrame(hold);
+  };
+
+  return (
+    <Collapsible
+      className={cn("group not-prose mb-4 w-full rounded-md border", className)}
+      onOpenChange={handleOpenChange}
+      {...props}
+    />
+  );
+};
 
 export type ToolPart = ToolUIPart | DynamicToolUIPart;
 
@@ -113,8 +138,8 @@ export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
     <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
       Parameters
     </h4>
-    <div className="rounded-md bg-muted/50">
-      <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+    <div className="max-h-40 overflow-auto rounded-md bg-muted/50">
+      <CodeBlock className={CODE_CLASS} code={JSON.stringify(input, null, 2)} language="json" />
     </div>
   </div>
 );
@@ -132,9 +157,9 @@ export const ToolOutput = ({ className, output, errorText, ...props }: ToolOutpu
   let Output = <div>{output as ReactNode}</div>;
 
   if (typeof output === "object" && !isValidElement(output)) {
-    Output = <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />;
+    Output = <CodeBlock className={CODE_CLASS} code={JSON.stringify(output, null, 2)} language="json" />;
   } else if (typeof output === "string") {
-    Output = <CodeBlock code={output} language="json" />;
+    Output = <CodeBlock className={CODE_CLASS} code={output} language="json" />;
   }
 
   return (
@@ -144,7 +169,7 @@ export const ToolOutput = ({ className, output, errorText, ...props }: ToolOutpu
       </h4>
       <div
         className={cn(
-          "max-h-80 overflow-auto rounded-md text-xs [&_table]:w-full",
+          "max-h-40 overflow-auto rounded-md text-xs [&_table]:w-full",
           errorText ? "bg-destructive/10 text-destructive" : "bg-muted/50 text-foreground",
         )}
       >

@@ -10,9 +10,6 @@ import { Redis } from "@upstash/redis";
  */
 export const hnIndex = Redis.fromEnv().search.index({ name: "hn" });
 
-/** Name of the skill that documents how to author queries for this index. */
-export const SEARCH_SKILL = "upstash-redis-search";
-
 /**
  * Human-readable schema of the `hn` index, embedded into each tool's
  * description so the model knows which fields it can filter / sort / aggregate.

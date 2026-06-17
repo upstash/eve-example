@@ -1,6 +1,6 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
-import { hnIndex, HN_SCHEMA_DOC, SEARCH_SKILL } from "../lib/hn-index.ts";
+import { hnIndex, HN_SCHEMA_DOC } from "../lib/hn-index.ts";
 
 /**
  * Generic pass-through for `index.aggregate()` on the `hn` index. Runs metric
@@ -12,7 +12,7 @@ You author the raw aggregate-options object ({ filter?, aggregations }) and it i
 Metric aggs: $avg $sum $min $max $count $stats $extendedStats $percentiles $cardinality. Bucket aggs: $terms $range $histogram (nest metrics under $aggs).
 IMPORTANT: to count DOCUMENTS matching a filter, use the "count" tool instead — $count counts non-null values of a field, not documents.
 Metric aggregations (incl. $count) only work on FAST numeric/date fields: score, ndesc, parent, time. Grouping ($terms) works on keyword fields and each bucket already includes its docCount.
-Load the "${SEARCH_SKILL}" skill (via load_skill) for the full aggregation syntax before writing aggregations.
+The full aggregation syntax is in the system prompt.
 
 ${HN_SCHEMA_DOC}`,
   inputSchema: z.object({
