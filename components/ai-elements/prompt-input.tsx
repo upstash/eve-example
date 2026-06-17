@@ -864,7 +864,7 @@ export const PromptInput = ({
       <form className="w-full" onSubmit={handleSubmit} ref={formRef} {...props}>
         <InputGroup
           className={cn(
-            "overflow-hidden rounded-2xl bg-card shadow-sm",
+            "overflow-hidden rounded-full bg-card shadow-sm",
             "focus-within:border-foreground has-[[data-slot=input-group-control]:focus-visible]:border-foreground",
             className,
           )}
@@ -1163,7 +1163,7 @@ export const PromptInputSubmit = ({
     <InputGroupButton
       aria-label={isGenerating ? "Stop" : "Submit"}
       className={cn(
-        "absolute right-2.5 bottom-2.5 flex aspect-square size-8 items-center justify-center rounded-full p-0",
+        "-translate-y-1/2 absolute top-1/2 right-2 flex aspect-square size-8 items-center justify-center rounded-full p-0",
         className,
       )}
       onClick={handleClick}

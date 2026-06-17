@@ -19,6 +19,16 @@ export type AgentInputResponse = {
   readonly text?: string;
 };
 
+/** Whether a message has anything worth showing (text, reasoning, or a tool call). */
+export function messageHasVisibleContent(message: EveMessage): boolean {
+  return message.parts.some(
+    (part) =>
+      part.type === "dynamic-tool" ||
+      (part.type === "text" && part.text.trim().length > 0) ||
+      (part.type === "reasoning" && part.text.trim().length > 0),
+  );
+}
+
 export function AgentMessage({
   canRespond,
   isStreaming,
@@ -35,15 +45,9 @@ export function AgentMessage({
     -1,
   );
 
-  // Don't render an empty assistant bubble while it's still spinning up — wait
-  // until there's actual text, reasoning, or a tool call to show.
-  const hasRenderableContent = message.parts.some(
-    (part) =>
-      part.type === "dynamic-tool" ||
-      (part.type === "text" && part.text.trim().length > 0) ||
-      (part.type === "reasoning" && part.text.trim().length > 0),
-  );
-  if (message.role === "assistant" && !hasRenderableContent) {
+  // Don't render an empty assistant bubble while it's still spinning up — the
+  // pending spinner (in AgentChat) covers that window instead.
+  if (message.role === "assistant" && !messageHasVisibleContent(message)) {
     return null;
   }
 

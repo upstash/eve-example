@@ -14,8 +14,9 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { AgentMessage } from "./agent-message";
+import { AgentMessage, messageHasVisibleContent } from "./agent-message";
 
 type AgentStatus = ReturnType<typeof useEveAgent>["status"];
 
@@ -32,6 +33,15 @@ export function AgentChat() {
   const agent = useEveAgent();
   const isBusy = agent.status === "submitted" || agent.status === "streaming";
   const isEmpty = agent.data.messages.length === 0;
+
+  // Show a spinner while waiting for the agent's first visible output (no text
+  // or tool call has streamed in yet).
+  const lastMessage = agent.data.messages.at(-1);
+  const awaitingResponse =
+    isBusy &&
+    (lastMessage === undefined ||
+      lastMessage.role !== "assistant" ||
+      !messageHasVisibleContent(lastMessage));
 
   const submitText = async (text: string) => {
     const trimmed = text.trim();
@@ -56,7 +66,7 @@ export function AgentChat() {
         {agent.error ? (
           <motion.div
             animate={{ height: "auto", opacity: 1 }}
-            className="mx-auto w-full max-w-3xl shrink-0 overflow-hidden px-4 sm:px-6"
+            className="mx-auto w-full max-w-4xl shrink-0 overflow-hidden px-4 sm:px-6"
             exit={{ height: 0, opacity: 0 }}
             initial={{ height: 0, opacity: 0 }}
           >
@@ -71,8 +81,8 @@ export function AgentChat() {
         ) : null}
       </AnimatePresence>
 
-      {isEmpty ? (
-        <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-6 px-4 pb-[8vh] sm:px-6">
+      {isEmpty && (
+        <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center gap-6 px-4 pb-[8vh] sm:px-6">
           <div className="flex flex-col items-center gap-2">
             <span className="mb-1 text-center text-muted-foreground text-xs uppercase tracking-wide">
               Try asking
@@ -96,10 +106,12 @@ export function AgentChat() {
             {composer}
           </motion.div>
         </section>
-      ) : (
+      )}
+
+      {!isEmpty && (
         <>
           <Conversation className="min-h-0 flex-1">
-            <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-4 py-6 sm:px-6">
+            <ConversationContent className="mx-auto w-full max-w-4xl gap-6 px-4 py-6 sm:px-6">
               {agent.data.messages.map((message, index) => (
                 <motion.div
                   animate={{ opacity: 1, y: 0 }}
@@ -118,11 +130,18 @@ export function AgentChat() {
                   />
                 </motion.div>
               ))}
+              {awaitingResponse ? (
+                <motion.div animate={{ opacity: 1 }} className="w-full" initial={{ opacity: 0 }}>
+                  <div className="flex w-fit items-center justify-center rounded-2xl bg-muted/50 px-4 py-3">
+                    <Spinner className="size-4 text-muted-foreground" />
+                  </div>
+                </motion.div>
+              ) : null}
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
           <motion.div
-            className="mx-auto w-full max-w-3xl shrink-0 px-4 pb-6 sm:px-6"
+            className="mx-auto w-full max-w-4xl shrink-0 px-4 pb-6 sm:px-6"
             layoutId="composer"
             transition={SPRING}
           >
