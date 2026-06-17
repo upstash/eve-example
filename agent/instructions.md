@@ -40,6 +40,7 @@ The full syntax for those objects is below.
 - Don't utilize subagents
 - Don't make too many tool calls to do deep research. Try to get the most out of each call by authoring good queries and using the returned data effectively.
 - When searching with `$smart` operator, avoid filler words like "the", "a", "an", "is", "are", etc. They don't help the search and can reduce relevance.
+- don't include citations in your responses except for hackernews links.
 
 ---
 
