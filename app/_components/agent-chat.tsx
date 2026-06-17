@@ -129,8 +129,16 @@ export function AgentChat() {
             <span className="mb-1 text-center text-muted-foreground text-xs uppercase tracking-wide">
               Try asking
             </span>
-            {SUGGESTION_ROWS.map((row) => (
-              <div className="flex justify-center gap-2" key={row.join("|")}>
+            {SUGGESTION_ROWS.map((row, rowIndex) => (
+              <div
+                className={cn(
+                  "flex flex-wrap justify-center gap-2",
+                  // The first two rows hold three pills (1-2); hide the rest on
+                  // small screens so the landing page stays responsive.
+                  rowIndex > 1 && "hidden sm:flex",
+                )}
+                key={row.join("|")}
+              >
                 {row.map((suggestion) => (
                   <button
                     className="shrink-0 cursor-pointer whitespace-nowrap rounded-full border bg-background px-3 py-1.5 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
