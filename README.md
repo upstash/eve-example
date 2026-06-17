@@ -10,7 +10,7 @@ Ask things like *"top stories about Rust"*, *"what do people say about remote
 work?"*, or *"average score of stories vs jobs"* and the agent grounds its
 answer in real HackerNews data.
 
-> Live example repo: [`upstash/eve-example`](https://github.com/upstash/eve-example)
+> Live example: https://upstash-hackernews-eve-agent.vercel.app/
 
 ## How it works
 
