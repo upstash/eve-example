@@ -995,7 +995,7 @@ export const PromptInputTextarea = ({
 
   return (
     <InputGroupTextarea
-      className={cn("field-sizing-content max-h-48 min-h-18", className)}
+      className={cn("field-sizing-content max-h-48 min-h-9", className)}
       name="message"
       onCompositionEnd={handleCompositionEnd}
       onCompositionStart={handleCompositionStart}
@@ -1162,7 +1162,10 @@ export const PromptInputSubmit = ({
   return (
     <InputGroupButton
       aria-label={isGenerating ? "Stop" : "Submit"}
-      className={cn("absolute right-2.5 bottom-2.5 rounded-full", className)}
+      className={cn(
+        "absolute right-2.5 bottom-2.5 flex aspect-square size-8 items-center justify-center rounded-full p-0",
+        className,
+      )}
       onClick={handleClick}
       size={size}
       type={isGenerating && onStop ? "button" : "submit"}

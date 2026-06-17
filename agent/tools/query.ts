@@ -1,6 +1,6 @@
 import { defineTool } from "eve/tools";
 import { z } from "zod";
-import { hnIndex, HN_SCHEMA_DOC, SEARCH_SKILL } from "../lib/hn-index.ts";
+import { hnIndex, HN_SCHEMA_DOC } from "../lib/hn-index.ts";
 
 /**
  * Generic pass-through for `index.query()` on the `hn` index. The model
@@ -10,7 +10,7 @@ import { hnIndex, HN_SCHEMA_DOC, SEARCH_SKILL } from "../lib/hn-index.ts";
 export default defineTool({
   description: `Run an Upstash Redis Search QUERY against the HackerNews "hn" index and return matching documents.
 You author the raw query-options object (filter, select, limit, offset, orderBy, scoreFunc, highlight) and it is passed straight to index.query(...).
-Load the "${SEARCH_SKILL}" skill (via load_skill) for the full filter/operator syntax before writing non-trivial queries.
+The full filter/operator syntax is in the system prompt.
 
 ${HN_SCHEMA_DOC}`,
   inputSchema: z.object({
